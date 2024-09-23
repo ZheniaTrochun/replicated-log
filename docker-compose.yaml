@@ -1,0 +1,36 @@
+version: '3'
+services:
+  master:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    environment:
+      ROLE: "master"
+      SENTINELS: "http://sentinel-1:8080,http://sentinel-2:8080"
+    depends_on:
+      - sentinel-1
+      - sentinel-2
+    networks:
+      - replicated_log
+  sentinel-1:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 8081:8080
+    environment:
+      ROLE: "sentinel"
+    networks:
+      - replicated_log
+  sentinel-2:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 8082:8080
+    environment:
+      ROLE: "sentinel"
+    networks:
+      - replicated_log
+
+networks:
+  replicated_log:

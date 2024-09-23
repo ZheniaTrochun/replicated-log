@@ -1,0 +1,4 @@
+/doc
+*.md
+docker-compose.yaml
+Dockerfile
