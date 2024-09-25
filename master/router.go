@@ -12,15 +12,11 @@ type Request struct {
 	Message string
 }
 
-type Controller struct {
-	service *LogMaster
+func InitRouter() {
+	http.HandleFunc("POST /insert", insertHandler)
 }
 
-func NewController(service *LogMaster) *Controller {
-	return &Controller{service: service}
-}
-
-func (c *Controller) Insert(w http.ResponseWriter, r *http.Request) {
+func insertHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -42,7 +38,7 @@ func (c *Controller) Insert(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof(`Storring message "%s"`, request.Message)
 
-	_, err = c.service.StoreMessage(request.Message)
+	_, err = storeMessage(request.Message)
 
 	log.Infof(`Storred message "%s" successfully`, request.Message)
 

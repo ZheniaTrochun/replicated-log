@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"replicated-log/persistence"
+	"replicated-log/repository"
+	"strings"
 )
 
 type SentinelClient struct {
@@ -17,7 +18,7 @@ func NewSentinelClient(address string) *SentinelClient {
 	return &SentinelClient{address}
 }
 
-func (s *SentinelClient) SyncItem(item persistence.Item, res chan int, err chan error) {
+func (s *SentinelClient) SyncItem(item repository.Item, res chan int, err chan error) {
 	request := Request{item.Id, item.Value, item.Timestamp}
 
 	serializedRequest, serErr := json.Marshal(request)
@@ -28,10 +29,22 @@ func (s *SentinelClient) SyncItem(item persistence.Item, res chan int, err chan 
 
 	bodyReader := bytes.NewReader([]byte(serializedRequest))
 
-	response, httpErr := http.Post(s.address+ReplicateEndpoint, "application/json", bodyReader)
+	requestUrl := withPrefix(s.address) + ReplicateEndpoint
+
+	response, httpErr := http.Post(requestUrl, "application/json", bodyReader)
 	if httpErr != nil {
 		err <- httpErr
 	} else {
 		res <- response.StatusCode
+	}
+}
+
+func withPrefix(address string) string {
+	if strings.HasPrefix(address, "http://") ||
+		strings.HasPrefix(address, "https://") {
+
+		return address
+	} else {
+		return "http://" + address
 	}
 }

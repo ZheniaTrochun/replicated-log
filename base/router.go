@@ -1,4 +1,4 @@
-package main
+package base
 
 import (
 	"encoding/json"
@@ -7,18 +7,14 @@ import (
 	"net/http"
 )
 
-type Service interface {
-	GetAll() []string
+func InitRouter() {
+	http.HandleFunc("GET /get-all", getAllHandler)
 }
 
-type Controller struct {
-	service Service
-}
-
-func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
+func getAllHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info("Retrieving list of stored messages")
 
-	messages := c.service.GetAll()
+	messages := getAll()
 
 	serializedRes, err := json.Marshal(messages)
 

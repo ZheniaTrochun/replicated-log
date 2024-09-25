@@ -4,13 +4,14 @@ import (
 	"github.com/apex/log"
 	"net/http"
 	"os"
+	"replicated-log/base"
 	"replicated-log/master"
+	"replicated-log/repository"
 	"replicated-log/sentinel"
 	"strings"
 )
 
 func main() {
-
 	role := os.Getenv("ROLE")
 
 	port := os.Getenv("PORT")
@@ -19,33 +20,40 @@ func main() {
 		port = "8080"
 	}
 
+	repository.InitDataStore()
+
 	switch strings.ToLower(role) {
 	case "master":
-		sentinelsEnv := os.Getenv("SENTINELS")
-		sentinelAddresses := strings.Split(sentinelsEnv, ",")
+		log.Info("Starting MASTER application...")
 
-		masterService := master.NewLogMaster(sentinelAddresses)
+		sentinelAddresses := getSentinelAddresses()
+		log.Infof("Sentinels: %s", sentinelAddresses)
 
-		postController := master.NewController(masterService)
-		getController := Controller{masterService}
-
-		http.HandleFunc("POST /insert", postController.Insert)
-		http.HandleFunc("GET /get-all", getController.GetAll)
-
+		master.InitLogMasterService(sentinelAddresses)
+		master.InitRouter()
 	case "sentinel":
-		sentinelService := sentinel.NewSentinel()
+		log.Info("Starting SENTINEL application...")
 
-		postController := sentinel.NewController(sentinelService)
-		getController := Controller{sentinelService}
-
-		http.HandleFunc("POST "+sentinel.ReplicateEndpoint, postController.Replicate)
-		http.HandleFunc("GET /get-all", getController.GetAll)
+		sentinel.InitRouter()
 	}
 
-	log.Infof("Starting server on port %s", port)
-	err := http.ListenAndServe(":"+port, nil)
+	base.InitRouter()
+
+	serveUrl := "0.0.0.0:" + port
+
+	err := http.ListenAndServe(serveUrl, nil)
 
 	if err != nil {
 		log.Fatalf("Failed to start server: %s", err)
+	}
+}
+
+func getSentinelAddresses() []string {
+	sentinelsEnv := os.Getenv("SENTINELS")
+
+	if len(sentinelsEnv) == 0 {
+		return make([]string, 0)
+	} else {
+		return strings.Split(sentinelsEnv, ",")
 	}
 }

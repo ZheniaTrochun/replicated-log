@@ -8,21 +8,19 @@ import (
 	"net/http"
 )
 
-type Controller struct {
-	service *Sentinel
-}
-
 type Request struct {
 	Id        int
 	Value     string
 	Timestamp int64
 }
 
-func NewController(service *Sentinel) *Controller {
-	return &Controller{service}
+func InitRouter() {
+	endpointPattern := "POST " + ReplicateEndpoint
+
+	http.HandleFunc(endpointPattern, replicateHandler)
 }
 
-func (c *Controller) Replicate(w http.ResponseWriter, r *http.Request) {
+func replicateHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -44,7 +42,7 @@ func (c *Controller) Replicate(w http.ResponseWriter, r *http.Request) {
 
 	//log.Infof("Replicating message %s", string(bodyBytes))
 
-	isDuplicate := c.service.Sync(request.Id, request.Value, request.Timestamp)
+	isDuplicate := sync(request.Id, request.Value, request.Timestamp)
 
 	if isDuplicate {
 		log.Warnf("Duplicate message replication: %s", string(bodyBytes))

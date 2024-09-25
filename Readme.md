@@ -17,6 +17,7 @@ For now we assume that all requests to sentinels successful and networks always 
 
 ## Example of work
 ![Example](doc/example_of_work.png)
+*Note: Logs a bit out of order between containers.*
 
 ## How to run locally
 
@@ -40,6 +41,12 @@ curl http://localhost:8080/get-all
 curl http://localhost:8081/get-all
 # read from second sentinel
 curl http://localhost:8082/get-all
+```
+
+Cleanup:
+
+```bash
+docker-compose down
 ```
 
 ## Algorithm for insertion

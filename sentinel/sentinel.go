@@ -1,29 +1,9 @@
 package sentinel
 
-import "replicated-log/persistence"
+import "replicated-log/repository"
 
-type Sentinel struct {
-	store *persistence.DataStore
-}
+func sync(id int, value string, timestamp int64) bool {
+	item := repository.Item{id, value, timestamp}
 
-func NewSentinel() *Sentinel {
-	return &Sentinel{persistence.NewStore()}
-}
-
-func (s *Sentinel) Sync(id int, value string, timestamp int64) bool {
-	item := persistence.Item{id, value, timestamp}
-
-	return s.store.InsertById(item)
-}
-
-func (s *Sentinel) GetAll() []string {
-	messages := s.store.GetAll()
-
-	res := make([]string, len(messages))
-
-	for i, message := range messages {
-		res[i] = message.Value
-	}
-
-	return res
+	return repository.InsertById(item)
 }
