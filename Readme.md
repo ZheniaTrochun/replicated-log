@@ -3,8 +3,10 @@
 **This is a toy project for trying out Golang and learning some distributed systems concepts.**   
   
 ## Idea
-Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels.  
-Sentinels expose `POST /replicate-item` endpoint that stores messages replicated from master (and should be called only by master).  
+Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels. Request format: `{"message": string}`  
+  
+Sentinels expose `POST /replicate-item` endpoint that stores messages replicated from master (and should be called only by master). Request format: `{"id": int, "value": string, "timestamp": int64}`
+  
 All sentinels and master expose `GET /get-all` endpoint that returns list of all stored messages.  
 
 ## Requirements

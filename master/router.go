@@ -1,38 +1,26 @@
 package master
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/apex/log"
-	"io"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 type Request struct {
-	Message string
+	Message string `json:"message"`
 }
 
-func InitRouter() {
-	http.HandleFunc("POST /insert", insertHandler)
+func InitRouter(router *gin.Engine) {
+	router.POST("/insert", insertHandler)
 }
 
-func insertHandler(w http.ResponseWriter, r *http.Request) {
-	bodyBytes, err := io.ReadAll(r.Body)
-
-	if err != nil {
-		log.Errorf("Error while reading body: %s", err)
-		w.WriteHeader(400)
-		_, _ = fmt.Fprintf(w, err.Error())
-		return
-	}
-
+func insertHandler(c *gin.Context) {
 	var request Request
 
-	err = json.Unmarshal(bodyBytes, &request)
+	err := c.BindJSON(&request)
+
 	if err != nil {
 		log.Errorf("Error while decoding body: %s", err)
-		w.WriteHeader(400)
-		_, _ = fmt.Fprintf(w, err.Error())
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -44,10 +32,8 @@ func insertHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Errorf(`Error while storring message "%s"`, err)
-		w.WriteHeader(500)
-		_, _ = fmt.Fprintf(w, err.Error())
-		return
+		c.JSON(500, gin.H{"error": err.Error()})
+	} else {
+		c.Status(200)
 	}
-
-	w.WriteHeader(200)
 }

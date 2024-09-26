@@ -2,41 +2,29 @@ package sentinel
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/apex/log"
-	"io"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 type Request struct {
-	Id        int
-	Value     string
-	Timestamp int64
+	Id        int    `json:"id"`
+	Value     string `json:"value"`
+	Timestamp int64  `json:"timestamp"`
 }
 
-func InitRouter() {
-	endpointPattern := "POST " + ReplicateEndpoint
+const replicateEndpoint = "/replicate-item"
 
-	http.HandleFunc(endpointPattern, replicateHandler)
+func InitRouter(router *gin.Engine) {
+	router.POST(replicateEndpoint, replicateHandler)
 }
 
-func replicateHandler(w http.ResponseWriter, r *http.Request) {
-	bodyBytes, err := io.ReadAll(r.Body)
-
-	if err != nil {
-		log.Errorf("Error while reading body: %s", err)
-		w.WriteHeader(400)
-		_, _ = fmt.Fprintf(w, err.Error())
-		return
-	}
-
+func replicateHandler(c *gin.Context) {
 	var request Request
+	err := c.BindJSON(&request)
 
-	err = json.Unmarshal(bodyBytes, &request)
 	if err != nil {
 		log.Errorf("Error while decoding body: %s", err)
-		w.WriteHeader(400)
-		_, _ = fmt.Fprintf(w, err.Error())
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -45,10 +33,17 @@ func replicateHandler(w http.ResponseWriter, r *http.Request) {
 	isDuplicate := sync(request.Id, request.Value, request.Timestamp)
 
 	if isDuplicate {
-		log.Warnf("Duplicate message replication: %s", string(bodyBytes))
+		log.Warnf("Duplicate message replication: %s", request)
 	} else {
-		log.Infof("Replicated message %s successfully", string(bodyBytes))
+		log.Infof("Replicated message %s successfully", request)
 	}
 
-	w.WriteHeader(200)
+	c.Status(201)
+}
+
+func (r Request) String() string {
+	res, _ := json.Marshal(r)
+
+	//return fmt.Sprintf(`{"id": "%d", "message": "%s", "timestamp": "%d"}`, r.Id, r.Value, r.Timestamp)
+	return string(res)
 }

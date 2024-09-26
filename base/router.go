@@ -1,39 +1,20 @@
 package base
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/apex/log"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
-func InitRouter() {
-	http.HandleFunc("GET /get-all", getAllHandler)
+func InitRouter(router *gin.Engine) {
+	router.GET("/get-all", getAllHandler)
 }
 
-func getAllHandler(w http.ResponseWriter, r *http.Request) {
+func getAllHandler(c *gin.Context) {
 	log.Info("Retrieving list of stored messages")
 
 	messages := getAll()
 
-	serializedRes, err := json.Marshal(messages)
+	log.Infof("Stored messages: %s", messages)
 
-	if err != nil {
-		log.Errorf("Error serializing response: %s", err)
-		w.WriteHeader(500)
-		fmt.Fprintf(w, err.Error())
-		return
-	}
-
-	w.WriteHeader(200)
-	_, err = w.Write(serializedRes)
-
-	log.Infof("Stored messages: %s", string(serializedRes))
-
-	if err != nil {
-		log.Errorf("Error serializing response: %s", err)
-		w.WriteHeader(500)
-		fmt.Fprintf(w, err.Error())
-		return
-	}
+	c.JSON(200, messages)
 }

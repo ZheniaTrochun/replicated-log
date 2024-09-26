@@ -12,8 +12,6 @@ type SentinelClient struct {
 	address string
 }
 
-const ReplicateEndpoint = "/replicate-item"
-
 func NewSentinelClient(address string) *SentinelClient {
 	return &SentinelClient{address}
 }
@@ -29,7 +27,7 @@ func (s *SentinelClient) SyncItem(item repository.Item, res chan int, err chan e
 
 	bodyReader := bytes.NewReader([]byte(serializedRequest))
 
-	requestUrl := withPrefix(s.address) + ReplicateEndpoint
+	requestUrl := withPrefix(s.address) + replicateEndpoint
 
 	response, httpErr := http.Post(requestUrl, "application/json", bodyReader)
 	if httpErr != nil {

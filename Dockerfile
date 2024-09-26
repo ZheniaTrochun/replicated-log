@@ -9,6 +9,8 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /replicated-log
 
+ENV GIN_MODE=release
+
 EXPOSE 8080
 
 CMD ["/replicated-log"]
