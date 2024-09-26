@@ -2,8 +2,8 @@ package sentinel
 
 import (
 	"encoding/json"
-	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 )
 
 type Request struct {
@@ -23,19 +23,17 @@ func replicateHandler(c *gin.Context) {
 	err := c.BindJSON(&request)
 
 	if err != nil {
-		log.Errorf("Error while decoding body: %s", err)
+		slog.Error("Error while decoding body.", "error", err)
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	//log.Infof("Replicating message %s", string(bodyBytes))
-
 	isDuplicate := sync(request.Id, request.Value, request.Timestamp)
 
 	if isDuplicate {
-		log.Warnf("Duplicate message replication: %s", request)
+		slog.Warn("Duplicate item replication,", "message", request)
 	} else {
-		log.Infof("Replicated message %s successfully", request)
+		slog.Info("Replicated item successfully,", "message", request)
 	}
 
 	c.Status(201)
@@ -44,6 +42,5 @@ func replicateHandler(c *gin.Context) {
 func (r Request) String() string {
 	res, _ := json.Marshal(r)
 
-	//return fmt.Sprintf(`{"id": "%d", "message": "%s", "timestamp": "%d"}`, r.Id, r.Value, r.Timestamp)
 	return string(res)
 }

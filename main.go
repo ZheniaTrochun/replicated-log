@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 	"os"
 	"replicated-log/base"
 	"replicated-log/master"
@@ -27,15 +27,15 @@ func main() {
 
 	switch strings.ToLower(role) {
 	case roleMaster:
-		log.Info("Starting MASTER application...")
+		slog.Info("Starting MASTER application...")
 
 		sentinelAddresses := getSentinelAddresses()
-		log.Infof("Sentinels: %s", sentinelAddresses)
+		slog.Info("Retrieved", "sentinels", sentinelAddresses)
 
 		master.InitLogMasterService(sentinelAddresses)
 		master.InitRouter(router)
 	case roleSentinel:
-		log.Info("Starting SENTINEL application...")
+		slog.Info("Starting SENTINEL application...")
 
 		sentinel.InitRouter(router)
 	}
@@ -46,7 +46,7 @@ func main() {
 	err := router.Run(serveUrl)
 
 	if err != nil {
-		log.Fatalf("Failed to start server: %s", err)
+		slog.Error("Failed to start server.", "error", err)
 	}
 }
 

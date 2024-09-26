@@ -19,7 +19,7 @@ For now we assume that all requests to sentinels successful and networks always 
 
 ## Example of work
 ![Example](doc/example_of_work.png)
-*Note: Logs a bit out of order between containers.*
+*Note: Logs may a bit out of order between containers.*
 
 ## How to run locally
 

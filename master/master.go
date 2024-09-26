@@ -1,7 +1,7 @@
 package master
 
 import (
-	"github.com/apex/log"
+	"log/slog"
 	"replicated-log/repository"
 	"replicated-log/sentinel"
 )
@@ -37,11 +37,11 @@ func storeMessage(msg string) (int, error) {
 	for range service.sentinels {
 		select {
 		case <-resChannel:
-			log.Info("Replication finished")
+			slog.Info("Replication finished", "id", item.Id)
 		case err := <-errChannel:
 			return -1, err
 		}
 	}
 
-	return len(service.sentinels), nil
+	return item.Id, nil
 }

@@ -1,8 +1,8 @@
 package master
 
 import (
-	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 )
 
 type Request struct {
@@ -19,21 +19,21 @@ func insertHandler(c *gin.Context) {
 	err := c.BindJSON(&request)
 
 	if err != nil {
-		log.Errorf("Error while decoding body: %s", err)
+		slog.Error("Error while decoding body.", "error", err)
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Infof(`Storring message "%s"`, request.Message)
+	slog.Info(`Storing`, "message", request.Message)
 
-	_, err = storeMessage(request.Message)
-
-	log.Infof(`Storred message "%s" successfully`, request.Message)
+	id, err := storeMessage(request.Message)
 
 	if err != nil {
-		log.Errorf(`Error while storring message "%s"`, err)
+		slog.Error(`Error while storing message.`, "message", request.Message, "error", err)
 		c.JSON(500, gin.H{"error": err.Error()})
-	} else {
-		c.Status(200)
+		return
 	}
+
+	slog.Info("Stored successfully", "message", request.Message, "id", id)
+	c.Status(200)
 }

@@ -1,8 +1,8 @@
 package base
 
 import (
-	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 )
 
 func InitRouter(router *gin.Engine) {
@@ -10,11 +10,11 @@ func InitRouter(router *gin.Engine) {
 }
 
 func getAllHandler(c *gin.Context) {
-	log.Info("Retrieving list of stored messages")
+	slog.Info("Retrieving list of stored messages")
 
 	messages := getAll()
 
-	log.Infof("Stored messages: %s", messages)
+	slog.Info("Stored", "messages", messages)
 
 	c.JSON(200, messages)
 }
