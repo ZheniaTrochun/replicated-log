@@ -16,7 +16,7 @@ func InitLogMasterService(sentinelAddresses []string) {
 	sentinels := make([]*sentinel.SentinelClient, len(sentinelAddresses))
 
 	for i, address := range sentinelAddresses {
-		sentinels[i] = sentinel.NewSentinelClient(address)
+		sentinels[i] = sentinel.NewSentinelClient(i, address)
 	}
 
 	service = &LogMaster{
@@ -31,13 +31,13 @@ func storeMessage(msg string) (int, error) {
 	errChannel := make(chan error, len(service.sentinels))
 
 	for _, sentinelClient := range service.sentinels {
-		go sentinelClient.SyncItem(item, resChannel, errChannel)
+		go sentinelClient.ReplicateItem(item, resChannel, errChannel)
 	}
 
 	for range service.sentinels {
 		select {
-		case <-resChannel:
-			slog.Info("Replication finished", "id", item.Id)
+		case replicaId := <-resChannel:
+			slog.Info("Replica updated", "replica_id", replicaId, "item_id", item.Id)
 		case err := <-errChannel:
 			return -1, err
 		}
