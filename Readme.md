@@ -3,7 +3,9 @@
 **This is a toy project for trying out Golang and learning some distributed systems concepts.**   
   
 ## Idea
-Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels. Request format: `{"message": string}`  
+Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels.   
+Consistency level of insert operation is configurable using `consistency` request field - number of instances that needs to persist item in order to mar request as success.  
+Request format: `{"message": string, "consistency": int}`  
   
 Sentinels expose `gRPC` endpoint that stores messages replicated from master (and should be called only by master). Request format: `"id": int32, "message": string, "timestamp": int64`
   

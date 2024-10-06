@@ -24,7 +24,7 @@ func InitLogMasterService(sentinelAddresses []string) {
 	}
 }
 
-func storeMessage(msg string) (int, error) {
+func storeMessage(msg string, consistencyLevel int) (int, error) {
 	item := repository.Insert(msg)
 
 	resChannel := make(chan int, len(service.sentinels))
@@ -34,7 +34,9 @@ func storeMessage(msg string) (int, error) {
 		go sentinelClient.ReplicateItem(item, resChannel, errChannel)
 	}
 
-	for range service.sentinels {
+	consistency := sanitizeConsistency(consistencyLevel)
+
+	for range consistency - 1 {
 		select {
 		case replicaId := <-resChannel:
 			slog.Info("Replica updated", "replica_id", replicaId, "item_id", item.Id)
@@ -44,4 +46,12 @@ func storeMessage(msg string) (int, error) {
 	}
 
 	return item.Id, nil
+}
+
+func sanitizeConsistency(consistency int) int {
+	if consistency < 1 || consistency > len(service.sentinels) {
+		return len(service.sentinels)
+	}
+
+	return consistency
 }
