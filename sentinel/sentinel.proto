@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "replicated-log/sentinel";
+
+package sentinel;
+
+service ReplicatedLogSentinel {
+    rpc Replicate (ReplicateRequest) returns (ReplicateResponse) {}
+}
+
+message ReplicateRequest {
+    int32 id = 1;
+    string message = 2;
+    int64 timestamp = 3;
+};
+
+message ReplicateResponse {
+    bool ack = 1;
+};

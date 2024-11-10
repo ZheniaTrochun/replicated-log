@@ -3,9 +3,11 @@
 **This is a toy project for trying out Golang and learning some distributed systems concepts.**   
   
 ## Idea
-Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels. Request format: `{"message": string}`  
+Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels.   
+Consistency level of insert operation is configurable using `consistency` request field - number of instances that needs to persist item in order to mar request as success.  
+Request format: `{"message": string, "consistency": int}`  
   
-Sentinels expose `POST /replicate-item` endpoint that stores messages replicated from master (and should be called only by master). Request format: `{"id": int, "value": string, "timestamp": int64}`
+Sentinels expose `gRPC` endpoint that stores messages replicated from master (and should be called only by master). Request format: `"id": int32, "message": string, "timestamp": int64`
   
 All sentinels and master expose `GET /get-all` endpoint that returns list of all stored messages.  
 
@@ -51,6 +53,13 @@ Cleanup:
 docker-compose down
 ```
 
+## Configs
+All configs are passed as env variables:  
+- ROLE: "master" or "sentinel" - role of instance in a cluster - REQUIRED 
+- PORT: port for HTTP server - OPTIONAL - 8080 by default
+- GRPC_PORT: port for gRPC server - only for sentinel applications - OPTIONAL - 9090 by default
+- SENTINELS: coma-separated list of sentinel instances in format \<host:grpc_port\> - REQUIRED for master
+
 ## Algorithm for insertion
 1. Store new message locally on master
    1. Acquire lock
@@ -58,7 +67,7 @@ docker-compose down
    3. Insert new item by new id
    4. Release lock
 2. For each sentinel in parallel
-   1. Send request to sentinel `POST /replicate-item` with message and id
+   1. Send `gRPC` request to sentinel with message and id
    2. Sentinel inserts item locally by id without locking
    3. Sentinel responds with success
    4. If response successful - send success to result channel

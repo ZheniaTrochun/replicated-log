@@ -2,3 +2,4 @@
 *.md
 docker-compose.yaml
 Dockerfile
+**.pb.go
