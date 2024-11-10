@@ -23,7 +23,7 @@ func InitDataStore() {
 	store := DataStore{}
 
 	store.items = make(map[int]Item)
-	store.lastId = -1
+	store.lastId = 0
 
 	db = &store
 }
@@ -55,7 +55,7 @@ func InsertById(item Item) bool {
 func GetAll() []Item {
 	var acc = make([]Item, 0, db.lastId+1)
 
-	for i := 0; i <= db.lastId; i++ {
+	for i := 1; i <= db.lastId; i++ {
 		item, ok := db.items[i]
 
 		// early return if missing some elements

@@ -6,8 +6,8 @@ import (
 )
 
 type Request struct {
-	Message     string `json:"message"`
-	Consistency int    `json:"consistency"`
+	Message      string `json:"message"`
+	WriteConcern int    `json:"writeConcern"`
 }
 
 func InitRouter(router *gin.Engine) {
@@ -25,9 +25,9 @@ func insertHandler(c *gin.Context) {
 		return
 	}
 
-	slog.Info(`Storing`, "message", request.Message, "consistency", request.Consistency)
+	slog.Info(`Storing`, "message", request.Message, "write-concern", request.WriteConcern)
 
-	id, err := storeMessage(request.Message, request.Consistency)
+	id, err := storeMessage(request.Message, request.WriteConcern)
 
 	if err != nil {
 		slog.Error(`Error while storing message.`, "message", request.Message, "error", err)

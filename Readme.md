@@ -4,8 +4,8 @@
   
 ## Idea
 Master receives messages via `POST /insert` endpoint. It stores message in memory and replicates it to all sentinels.   
-Consistency level of insert operation is configurable using `consistency` request field - number of instances that needs to persist item in order to mar request as success.  
-Request format: `{"message": string, "consistency": int}`  
+Consistency level of insert operation is configurable using `writeConcern` request field - number of instances that needs to persist item in order to mark request as success.  
+Request format: `{"message": string, "writeConcern": int}`  
   
 Sentinels expose `gRPC` endpoint that stores messages replicated from master (and should be called only by master). Request format: `"id": int32, "message": string, "timestamp": int64`
   
@@ -34,17 +34,11 @@ These commands will start master on port `8080` and two sentinels on ports `8081
 Operating locally:
 
 ```bash
-# insert several messages
-curl -X POST http://localhost:8080/insert -d '{"message": "1"}'
-curl -X POST http://localhost:8080/insert -d '{"message": "2"}'
-curl -X POST http://localhost:8080/insert -d '{"message": "3"}'
-
-# read from master
-curl http://localhost:8080/get-all
-# read from first sentinel
-curl http://localhost:8081/get-all
-# read from second sentinel
-curl http://localhost:8082/get-all
+./test_1.sh &
+sleep 3
+./test_2.sh &
+sleep 17
+./test_get_all.sh
 ```
 
 Cleanup:
@@ -71,5 +65,5 @@ All configs are passed as env variables:
    2. Sentinel inserts item locally by id without locking
    3. Sentinel responds with success
    4. If response successful - send success to result channel
-3. Wait for all requests
+3. Wait for `writeConcern - 1` responses from sentinels
 4. Return success

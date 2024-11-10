@@ -2,9 +2,9 @@ package sentinel
 
 import (
 	context "context"
+	jitter "github.com/go-toolbelt/jitter"
 	grpc "google.golang.org/grpc"
 	"log/slog"
-	"math/rand/v2"
 	"time"
 )
 
@@ -12,17 +12,25 @@ type sentinelServer struct {
 	UnimplementedReplicatedLogSentinelServer
 }
 
+// if item number 3, 6, 9 etc - longer delay (up to 3 seconds)
+var DELAYS = [3]int{1, 1, 3}
+
 func (s sentinelServer) Replicate(_ context.Context, in *ReplicateRequest) (*ReplicateResponse, error) {
 
-	//random delay 1-5 seconds
-	sleepSeconds := rand.Int()%5 + 1
+	delaySecondsBasedOnId := DELAYS[int(in.Id-1)%len(DELAYS)]
 
-	// if item number 3, 6, 9 etc - longer delay (6-10 seconds)
-	if (in.Id+1)%3 == 0 {
-		sleepSeconds += 5
-	}
+	initialDelay := time.Duration(delaySecondsBasedOnId) * time.Second
 
-	time.Sleep(time.Duration(sleepSeconds) * time.Second)
+	delay := jitter.By(initialDelay, 500*time.Millisecond)
+	////random delay 1-5 seconds
+	//sleepSeconds := rand.Int()%5 + 1
+	//
+	//// if item number 3, 6, 9 etc - longer delay (6-10 seconds)
+	//if (in.Id+1)%3 == 0 {
+	//	sleepSeconds += 5
+	//}
+
+	time.Sleep(delay)
 
 	isDuplicate := syncReplica(int(in.Id), in.Message, in.Timestamp)
 
